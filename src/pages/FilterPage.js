@@ -1,22 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "../components/Container";
 import { useNavigate } from "react-router-dom";
 import styles from "./FilterPage.module.css";
 
 function FilterPage() {
   const navigate = useNavigate();
+
+  const [filters, setFilters] = useState(() => {
+    const savedFilters = sessionStorage.getItem("filters");
+    return savedFilters
+      ? JSON.parse(savedFilters)
+      : {
+          PER: { checked: false, value: "" },
+          PBR: { checked: false, value: "" },
+          ROE: { checked: false, value: "" },
+          RSI: { checked: false, value: "" },
+          시가총액: { checked: false, value: "" },
+        };
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("filters", JSON.stringify(filters));
+  }, [filters]);
+
   const setbutton = () => {
     navigate("/stock-page");
   };
-
-  const [filters, setFilters] = useState({
-    PER: { checked: false, value: "" },
-    PBR: { checked: false, value: "" },
-    ROE: { checked: false, value: "" },
-    RSI: { checked: false, value: "" },
-    기타지표1: { checked: false, value: "" },
-    기타지표2: { checked: false, value: "" },
-  });
 
   const handleCheckboxChange = (e, key) => {
     setFilters({
@@ -43,30 +52,28 @@ function FilterPage() {
             </div>
 
             <div className={styles.filterSetDec}>
-              {["PER", "PBR", "ROE", "RSI", "기타지표1", "기타지표2"].map(
-                (filter) => (
-                  <div className={styles.filterItem} key={filter}>
-                    <label className={styles.customCheckbox}>
-                      <input
-                        type="checkbox"
-                        name="filter"
-                        checked={filters[filter].checked}
-                        onChange={(e) => handleCheckboxChange(e, filter)}
-                      />
-                      <span className={styles.checkboxMark}></span>
-                      {filter}
-                    </label>
+              {["PER", "PBR", "ROE", "RSI", "시가총액"].map((filter) => (
+                <div className={styles.filterItem} key={filter}>
+                  <label className={styles.customCheckbox}>
                     <input
-                      type="text"
-                      placeholder="입력해주세요"
-                      value={filters[filter].value}
-                      onChange={(e) => handleInputChange(e, filter)}
-                      className={styles.inputField}
-                      disabled={!filters[filter].checked}
+                      type="checkbox"
+                      name="filter"
+                      checked={filters[filter].checked}
+                      onChange={(e) => handleCheckboxChange(e, filter)}
                     />
-                  </div>
-                )
-              )}
+                    <span className={styles.checkboxMark}></span>
+                    {filter}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="입력해주세요"
+                    value={filters[filter].value}
+                    onChange={(e) => handleInputChange(e, filter)}
+                    className={styles.inputField}
+                    disabled={!filters[filter].checked}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>

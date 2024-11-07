@@ -1,44 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "../components/Container";
 import { useNavigate } from "react-router-dom";
 import styles from "./StockPage.module.css";
 
-// DB 연결해야할 부분
-const suggestions = ["애플", "구글", "테슬라", "삼성전자", "카카오", "삼성"];
-const cardData = [
-  { name: "A 기업", value: "407,000" },
-  { name: "B 기업", value: "190,300" },
-  { name: "C 기업", value: "169,300" },
-  { name: "D 기업", value: "126,000" },
-  { name: "E 기업", value: "38,000" },
-  { name: "F 기업", value: "53,000" },
-  { name: "G 기업", value: "407,000" },
-  { name: "BD 기업", value: "190,300" },
-  { name: "CS 기업", value: "169,300" },
-  { name: "DD 기업", value: "126,000" },
-  { name: "EE 기업", value: "38,000" },
-  { name: "FD 기업", value: "53,000" },
-  { name: "V 기업", value: "407,000" },
-  { name: "BK 기업", value: "190,300" },
-  { name: "CZ 기업", value: "169,300" },
-  { name: "DS 기업", value: "126,000" },
-  { name: "EY 기업", value: "38,000" },
-  { name: "FI 기업", value: "53,000" },
+const suggestions = [
+  "애플",
+  "구글",
+  "테슬라",
+  "삼성전자",
+  "카카오",
+  "삼성",
+  "한화오션",
+  "더본코리아",
+  "삼성중공업",
+  "삼성SDI",
 ];
 
 function StockPage() {
   const navigate = useNavigate();
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedCompanies, setSelectedCompanies] = useState(() => {
+    const savedCompanies = sessionStorage.getItem("selectedCompanies");
+    return savedCompanies ? JSON.parse(savedCompanies) : [];
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "selectedCompanies",
+      JSON.stringify(selectedCompanies)
+    );
+  }, [selectedCompanies]);
+
   const analyzebutton = () => {
-    if (selectedCompany) {
-      navigate("/result-page", { state: { company: selectedCompany } });
+    if (selectedCompanies.length > 0) {
+      navigate("/result-page", { state: { companies: selectedCompanies } });
+    } else {
+      alert("분석할 기업을 선택해 주세요.");
     }
   };
+
   const recbutton = () => {
     navigate("/filter-page");
   };
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
 
   const handleChange = (event) => {
     const value = event.target.value;
@@ -55,24 +59,34 @@ function StockPage() {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSelectedCompany(suggestion); // 선택된 기업 업데이트
-    navigate("/result-page", { state: { company: suggestion } }); // 결과 페이지로 이동
+    if (selectedCompanies.length >= 5) {
+      alert("5개까지만 선택할 수 있습니다.");
+      return;
+    }
+    if (!selectedCompanies.includes(suggestion)) {
+      setSelectedCompanies([...selectedCompanies, suggestion]);
+    }
+    setSearchTerm("");
+    setFilteredSuggestions([]);
   };
 
-  const Card = ({ name, value }) => {
-    const isSelected = selectedCompany === name;
-    return (
-      <div
-        className={`${styles.card} ${isSelected ? styles.selectedCard : ""}`}
-        onClick={() => setSelectedCompany(name)}
-      >
-        <div className={styles.cardContent}>
-          <h3>{name}</h3>
-          <p>{value}</p>
-        </div>
-      </div>
-    );
+  const handleRemoveCompany = (company) => {
+    setSelectedCompanies(selectedCompanies.filter((item) => item !== company));
   };
+
+  const Card = ({ name }) => (
+    <div className={styles.card}>
+      <div className={styles.cardContent}>
+        <h3>{name}</h3>
+      </div>
+      <button
+        onClick={() => handleRemoveCompany(name)}
+        className={styles.removeButton}
+      >
+        삭제
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -84,14 +98,14 @@ function StockPage() {
             value={searchTerm}
             onChange={handleChange}
             className={styles.searchInput}
-            placeholder="종목명 / 지수명 입력"
+            placeholder="추가하고 싶은 관심 종목명 / 지수명을 입력해주세요"
           />
           {filteredSuggestions.length > 0 && (
             <ul className={styles.suggestions}>
               {filteredSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
-                  onClick={() => handleSuggestionClick(suggestion)} // 클릭 시 함수 호출
+                  onClick={() => handleSuggestionClick(suggestion)}
                   className={styles.suggestionItem}
                 >
                   {suggestion}
@@ -103,16 +117,22 @@ function StockPage() {
         <div className={styles.set}>
           <div className={styles.stockRec}>
             <div className={styles.stockRecDes}>
-              <p>필터에 따른 종목 추천 or 인기 종목</p>
+              <p>관심 기업 / 종목</p>
               <button className={styles.recButton} onClick={recbutton}>
                 필터설정
               </button>
             </div>
 
             <div className={styles.cardContainer}>
-              {cardData.map((card, index) => (
-                <Card key={index} {...card} />
-              ))}
+              {selectedCompanies.length === 0 ? (
+                <p className={styles.placeholder}>
+                  관심 기업/종목을 추가해주세요
+                </p>
+              ) : (
+                selectedCompanies.map((company, index) => (
+                  <Card key={index} name={company} />
+                ))
+              )}
             </div>
           </div>
         </div>
