@@ -109,7 +109,7 @@ def predict_next_day_price(closing_prices):
     ])
 
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, y_train, batch_size=1, epochs=10, verbose=1)
+    model.fit(x_train, y_train, batch_size=1, epochs=5, verbose=1)
 
     # 다음날 예측하기 위한 입력 데이터 생성 (마지막 60일 데이터)
     last_60_days = scaled_data[-sequence_length:]
