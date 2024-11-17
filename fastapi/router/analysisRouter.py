@@ -250,4 +250,10 @@ def result(stock_id : str):
     return result
 
 
+@router.get("/closing-prices/{stock_id}")
+def closing_prices(stock_id : str):
 
+    data_code = str(stock_id) + ".KS"
+    close = get_stock_prices_360_days(data_code)['종가']
+
+    return close
